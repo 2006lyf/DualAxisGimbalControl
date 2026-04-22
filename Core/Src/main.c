@@ -58,6 +58,7 @@ vision_target_t vision_target = {0};
 imu_data_t imu_data = {0};
 motor_feedback_t yaw_feedback = {0};
 motor_feedback_t pitch_feedback = {0};
+uint8_t usb_tx_result = 10;
 
 /* 任务间通信句柄 */
 osSemaphoreId_t imu_semaphore;
@@ -69,7 +70,7 @@ osMessageQueueId_t usb_queue;
 uint8_t usb_rx_buffer[64];
 
 /* 控制对象 */
-static gimbal_ctrl_t gimbal_ctrl;
+gimbal_ctrl_t gimbal_ctrl;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -131,10 +132,12 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM2_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_Base_Start_IT(&htim2);
+  /* init code for USB_DEVICE */
+  MX_USB_DEVICE_Init();
   BMI088_Init();
   GM6020_Init();
   Gimbal_Init(&gimbal_ctrl);
-  
   /* 创建任务间通信对象 */
   imu_semaphore = osSemaphoreNew(1, 0, NULL);
   control_semaphore = osSemaphoreNew(1, 0, NULL);

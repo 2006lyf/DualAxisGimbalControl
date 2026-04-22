@@ -30,6 +30,7 @@
 #include "pid.h"
 #include "gimbal_ctrl.h"
 #include "protocol.h"
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -55,6 +56,7 @@ extern vision_target_t vision_target;
 extern imu_data_t imu_data;
 extern motor_feedback_t yaw_feedback;
 extern motor_feedback_t pitch_feedback;
+extern uint8_t usb_tx_result;
 
 /* 任务间通信句柄 */
 extern osSemaphoreId_t imu_semaphore;
@@ -168,8 +170,6 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartTask_Gyro */
 void StartTask_Gyro(void *argument)
 {
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartTask_Gyro */
   TickType_t xLastWakeTime = xTaskGetTickCount();
   /* Infinite loop */
@@ -261,11 +261,41 @@ void StartTask_USB_Receive(void *argument)
       /* 更新最新目标 */
       vision_target = target;
       last_target_time = HAL_GetTick();
-      
+   
       /* 切换到跟踪模式 */
       gimbal_mode = GIMBAL_MODE_TRACKING;
+
+      GM6020_GetFeedback(&yaw_feedback, &pitch_feedback);
+      uint8_t tx_buffer[11];
+      Protocol_BuildTx(tx_buffer, &yaw_feedback, &pitch_feedback);
+      usb_tx_result = CDC_Transmit_FS(tx_buffer, 11);
     }
     
+    // if(Protocol_Parse(usb_rx_buffer, 64, &target))
+    //     {
+    //         /*  关键：根据置信度判断数据是否有效 */
+    //         if(target.confidence >= 50)  // 置信度>=50%认为是有效数据
+    //         {
+    //             /* 有效数据：更新目标，切换到跟踪模式 */
+    //             vision_target = target;
+    //             last_valid_target_time = HAL_GetTick();
+    //             lost_counter = 0;
+    //             gimbal_mode = GIMBAL_MODE_TRACKING;
+    //         }
+    //         else
+    //         {
+    //             /*  无效数据（置信度低）：说明视觉丢失目标 */
+    //             lost_counter++;
+                
+    //             /* 连续多次收到无效数据，才认为真正丢失（防抖） */
+    //             if(lost_counter >= 3)
+    //             {
+    //                 gimbal_mode = GIMBAL_MODE_SEARCH;
+    //                 // printf("Target lost! Switch to SEARCH mode\r\n");
+    //             }
+    //         }
+    //     }
+
     /* 超时检测 - 500ms无数据则切搜索 */
     if(HAL_GetTick() - last_target_time > 500)  // VISION_TIMEOUT_MS
     {

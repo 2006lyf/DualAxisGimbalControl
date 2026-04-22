@@ -28,12 +28,13 @@ uint8_t Protocol_Parse(uint8_t *data, uint32_t len, vision_target_t *target)
     target->yaw = frame->yaw;
     target->pitch = frame->pitch;
     target->confidence = 100;
+    //target->confidence = frame->confidence;  // 保存置信度
     target->timestamp = HAL_GetTick();
     
     return 1;
 }
 
-void Protocol_BuildTx(uint8_t *buffer, imu_data_t *imu, motor_feedback_t *yaw, motor_feedback_t *pitch)
+void Protocol_BuildTx(uint8_t *buffer, motor_feedback_t *yaw, motor_feedback_t *pitch)
 {
     tx_frame_t *frame = (tx_frame_t*)buffer;
     
@@ -43,7 +44,7 @@ void Protocol_BuildTx(uint8_t *buffer, imu_data_t *imu, motor_feedback_t *yaw, m
     /* 当前角度 */
     frame->yaw = GM6020_AngleToDegree(yaw->angle);
     frame->pitch = GM6020_AngleToDegree(pitch->angle);
-    frame->roll = 0;  // 单轴云台无roll
+    //frame->roll = 0;  // 单轴云台无roll
     
     /* 计算校验和 */
     frame->checksum = Protocol_CalcChecksum(buffer, sizeof(tx_frame_t) - 1);

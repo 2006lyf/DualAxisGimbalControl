@@ -22,7 +22,8 @@
 #include "usbd_cdc_if.h"
 
 /* USER CODE BEGIN INCLUDE */
-
+#include "main.h"
+#include "cmsis_os.h"
 /* USER CODE END INCLUDE */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -31,7 +32,8 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-
+extern uint8_t usb_rx_buffer[64];
+extern osSemaphoreId_t usb_semaphore;
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -155,6 +157,8 @@ static int8_t CDC_Init_FS(void)
   /* Set Application Buffers */
   USBD_CDC_SetTxBuffer(&hUsbDeviceFS, UserTxBufferFS, 0);
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, UserRxBufferFS);
+  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+
   return (USBD_OK);
   /* USER CODE END 3 */
 }
@@ -261,8 +265,19 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+  /* 1. 复制数据到全局缓冲区 */
+  memcpy(usb_rx_buffer, Buf, *Len);
+  
+  /* 2. 释放信号量，通知 USB 接收任务 */
+  if(usb_semaphore != NULL)
+  {
+    osSemaphoreRelease(usb_semaphore);
+  }
+  
+  /* 3. 准备下一次接收 */
   USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+  
   return (USBD_OK);
   /* USER CODE END 6 */
 }

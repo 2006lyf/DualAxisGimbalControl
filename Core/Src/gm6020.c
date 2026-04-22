@@ -3,10 +3,10 @@
 #include "can.h"
 #include "gimbal_ctrl.h"
 
-gimbal_ctrl_t gimbal_ctrl;
 
 static motor_feedback_t yaw_motor = {0};
 static motor_feedback_t pitch_motor = {0};
+
 
 void GM6020_Init(void)
 {
