@@ -5,9 +5,10 @@
 #include "main.h"
 
 /* CAN ID 定义 (根据实际修改) */
-#define CAN_CMD_ID          0x1FF  // 控制指令ID
-#define YAW_FB_ID           0x205  // Yaw电机反馈ID
-#define PITCH_FB_ID         0x206  // Pitch电机反馈ID
+#define YAW_CMD_ID      0x1FF    
+#define PITCH_CMD_ID    0x2FF
+#define YAW_FB_ID           0x206  // Yaw电机反馈ID
+#define PITCH_FB_ID         0x208  // Pitch电机反馈ID
 
 /* 电流限幅 */
 #define CURRENT_MAX         16384

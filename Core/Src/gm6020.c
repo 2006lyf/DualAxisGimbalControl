@@ -28,6 +28,7 @@ void GM6020_SetCurrent(int16_t yaw_current, int16_t pitch_current)
     if(pitch_current < CURRENT_MIN) pitch_current = CURRENT_MIN;
     
     /* 填充数据 - 标准6020协议 */
+    /* 发送 Yaw 电机指令 (ID 2，用 0x1FF) */
     tx_data[0] = (yaw_current >> 8) & 0xFF;
     tx_data[1] = yaw_current & 0xFF;
     tx_data[2] = (pitch_current >> 8) & 0xFF;
@@ -37,13 +38,20 @@ void GM6020_SetCurrent(int16_t yaw_current, int16_t pitch_current)
     tx_data[6] = 0;
     tx_data[7] = 0;
     
-    tx_header.StdId = CAN_CMD_ID;
+    tx_header.StdId = YAW_CMD_ID;
     tx_header.ExtId = 0;
     tx_header.IDE = CAN_ID_STD;
     tx_header.RTR = CAN_RTR_DATA;
     tx_header.DLC = 8;
     tx_header.TransmitGlobalTime = DISABLE;
     
+    HAL_CAN_AddTxMessage(&hcan1, &tx_header, tx_data, &mailbox);
+
+    /* 发送 Pitch 电机指令 (ID 4，用 0x2FF) */
+    tx_data[0] = (pitch_current >> 8) & 0xFF;
+    tx_data[1] = pitch_current & 0xFF;
+    
+    tx_header.StdId = PITCH_CMD_ID;  // 0x2FF
     HAL_CAN_AddTxMessage(&hcan1, &tx_header, tx_data, &mailbox);
 }
 

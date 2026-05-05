@@ -265,6 +265,9 @@ static int8_t CDC_Control_FS(uint8_t cmd, uint8_t* pbuf, uint16_t length)
 static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
 {
   /* USER CODE BEGIN 6 */
+  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
+  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+
   /* 1. 复制数据到全局缓冲区 */
   memcpy(usb_rx_buffer, Buf, *Len);
   
@@ -273,10 +276,7 @@ static int8_t CDC_Receive_FS(uint8_t* Buf, uint32_t *Len)
   {
     osSemaphoreRelease(usb_semaphore);
   }
-  
-  /* 3. 准备下一次接收 */
-  USBD_CDC_SetRxBuffer(&hUsbDeviceFS, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUsbDeviceFS);
+
   
   return (USBD_OK);
   /* USER CODE END 6 */
